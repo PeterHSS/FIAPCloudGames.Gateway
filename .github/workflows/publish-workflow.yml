@@ -1,0 +1,59 @@
+name: Deploy to Azure Container Apps
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  DOCKERHUB_REPOSITORY: klurgs/fgc-gateway
+  CONTAINER_APP_NAME: fgc-gateway
+  RESOURCE_GROUP: fgc-rg
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build
+        run: dotnet build FiapCloudGames.Gateway.sln --configuration Release
+
+      - name: Test
+        run: dotnet test FiapCloudGames.Gateway.sln --configuration Release --no-build --verbosity normal
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push container image to Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
+          file: FIAPCloudGames.Gateway.Api/Dockerfile
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          imageToDeploy: ${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          containerAppName: ${{ env.CONTAINER_APP_NAME }}
+          environmentVariables: |
+            ASPNETCORE_ENVIRONMENT=Development
