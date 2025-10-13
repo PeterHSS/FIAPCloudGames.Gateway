@@ -1,13 +1,26 @@
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using FIAPCloudGames.Gateway.Api;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Yarp.ReverseProxy.Transforms;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .AddTransforms(builderContext =>
+    {
+        builderContext.AddRequestTransform(async transformContext =>
+        {
+            var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+                transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        });
+    });
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -25,6 +38,8 @@ builder.Services
             ClockSkew = TimeSpan.Zero,
             RoleClaimType = ClaimTypes.Role
         };
+
+        options.SaveToken = true;
     });
 
 builder.Services.AddAuthorization(options =>
