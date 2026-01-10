@@ -4,15 +4,15 @@ metadata:
   name: fiapcloudgames-api-gateway
   namespace: fgc
 spec:
-  replicas: 2
+  replicas:  2
   selector:
     matchLabels:
-      app: fiapcloudgames-api-gateway
+      app:  fiapcloudgames-api-gateway
   template:
     metadata:
       labels:
         app: fiapcloudgames-api-gateway
-    spec:
+    spec: 
       containers:
         - name: fiapcloudgames-api-gateway
           image: ${IMAGE}
@@ -20,47 +20,70 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: USERS_API_URL
-              value: http://fiapcloudgames-users-api.fgc.svc.cluster.local
+            - name:  USERS_API_URL
+              value: http://fiapcloudgames-users-api.fgc.svc.cluster. local
             - name: ORDERS_API_URL
-              value: http://fiapcloudgames-orders-api.fgc.svc.cluster.local
+              value:  http://fiapcloudgames-orders-api.fgc.svc.cluster.local
             - name: GAMES_API_URL
               value: http://fiapcloudgames-games-api.fgc.svc.cluster.local
           resources:
             requests:
               cpu: 200m
-              memory: 256Mi
-            limits:
+              memory:  256Mi
+            limits: 
               cpu: 500m
               memory: 512Mi
 ---
 apiVersion: v1
-kind: Service
+kind:  Service
 metadata:
-  name: fiapcloudgames-api-gateway
+  name:  fiapcloudgames-api-gateway
   namespace: fgc
 spec:
-  type: LoadBalancer
+  type:  ClusterIP
   selector:
     app: fiapcloudgames-api-gateway
-  ports:
+  ports: 
     - port: 80
       targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: 
+  name: fiapcloudgames-gateway-ingress
+  namespace: fgc
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb. ingress.kubernetes.io/load-balancer-name: fiapcloudgames-gateway
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType:  Prefix
+            backend:
+              service:
+                name: fiapcloudgames-api-gateway
+                port:
+                  number: 80
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: fiapcloudgames-api-gateway-hpa
   namespace: fgc
-spec:
-  scaleTargetRef:
+spec: 
+  scaleTargetRef: 
     apiVersion: apps/v1
     kind: Deployment
     name: fiapcloudgames-api-gateway
   minReplicas: 2
   maxReplicas: 10
   metrics:
-    - type: Resource
+    - type:  Resource
       resource:
         name: cpu
         target:
