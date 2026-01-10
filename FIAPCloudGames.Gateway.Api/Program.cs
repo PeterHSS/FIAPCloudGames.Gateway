@@ -47,6 +47,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy => policy.RequireRole(Roles.Administrator));
 });
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseAuthentication();
@@ -54,6 +56,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapReverseProxy();
+
+app.UseHealthChecks("/health");
 
 app.Run();
 
