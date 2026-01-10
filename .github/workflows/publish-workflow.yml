@@ -69,5 +69,5 @@ jobs:
       - name: Deploy to EKS
         run: |
           export IMAGE=${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
-          envsubst < kubernetes.yaml | kubectl apply -f -
+          envsubst < FIAPCloudGames.Gateway.Api/kubernetes.yaml | kubectl apply -f -
           kubectl rollout status deployment/fiapcloudgames-api-gateway -n ${{ env.K8S_NAMESPACE }}
