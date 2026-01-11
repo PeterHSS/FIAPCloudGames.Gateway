@@ -4,6 +4,7 @@ using System.Text;
 using FIAPCloudGames.Gateway.Api;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Yarp.ReverseProxy.Transforms;
 
@@ -55,7 +56,7 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.UseHealthChecks("/health");
+app.UseHealthChecks("/health", new HealthCheckOptions { ResponseWriter = async (context, report) => { context.Response.ContentType = "text/plain"; await context.Response.WriteAsync("OK"); } });
 
 app.MapReverseProxy();
 
