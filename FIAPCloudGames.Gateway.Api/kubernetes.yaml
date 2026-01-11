@@ -21,7 +21,7 @@ spec:
             - containerPort: 8080
           env:
             - name:  USERS_API_URL
-              value: http://fiapcloudgames-users-api.fgc.svc.cluster. local
+              value: http://fiapcloudgames-users-api.fgc.svc.cluster.local
             - name: ORDERS_API_URL
               value:  http://fiapcloudgames-orders-api.fgc.svc.cluster.local
             - name: GAMES_API_URL
