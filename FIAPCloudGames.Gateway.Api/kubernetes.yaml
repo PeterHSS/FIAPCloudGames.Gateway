@@ -1,77 +1,78 @@
+---
 apiVersion: apps/v1
 kind: Deployment
-metadata: 
+metadata:
   name: fiapcloudgames-api-gateway
   namespace: fgc
-spec: 
-  replicas:  2
+spec:
+  replicas: 2
   selector:
     matchLabels:
-      app:  fiapcloudgames-api-gateway
+      app: fiapcloudgames-api-gateway
   template:
     metadata:
       labels:
         app: fiapcloudgames-api-gateway
-    spec:  
+    spec:
       containers:
-        - name: fiapcloudgames-api-gateway
-          image:  ${IMAGE}
-          imagePullPolicy: Always
-          ports: 
-            - containerPort: 8080
-          env:
-            - name:  USERS_API_URL
-              value: http://fiapcloudgames-users-api.fgc.svc.cluster.local
-            - name: ORDERS_API_URL
-              value:  http://fiapcloudgames-orders-api.fgc.svc.cluster.local
-            - name: GAMES_API_URL
-              value: http://fiapcloudgames-games-api.fgc.svc.cluster.local
-          resources:
-            requests:
-              cpu: 200m
-              memory:  256Mi
-            limits: 
-              cpu: 500m
-              memory: 512Mi
+      - env:
+        - name: USERS_API_URL
+          value: http://fiapcloudgames-users-api.fgc.svc.cluster.local
+        - name: ORDERS_API_URL
+          value: http://fiapcloudgames-orders-api.fgc.svc.cluster.local
+        - name: GAMES_API_URL
+          value: http://fiapcloudgames-games-api.fgc.svc.cluster.local
+        image: ${IMAGE}
+        imagePullPolicy: Always
+        name: fiapcloudgames-api-gateway
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
 ---
 apiVersion: v1
-kind:  Service
+kind: Service
 metadata:
-  name:  fiapcloudgames-api-gateway
-  namespace: fgc
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type:  "nlb"
-    service. beta.kubernetes.io/aws-load-balancer-name: "fiapcloudgames-gateway"
+    service.beta.kubernetes.io/aws-load-balancer-name: fiapcloudgames-gateway
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: fiapcloudgames-api-gateway
+  namespace: fgc
 spec:
-  type:  LoadBalancer
-  selector: 
-    app: fiapcloudgames-api-gateway
   ports:
-    - port: 80
-      targetPort: 8080
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: fiapcloudgames-api-gateway
+  type: LoadBalancer
 ---
 apiVersion: autoscaling/v2
-kind:  HorizontalPodAutoscaler
+kind: HorizontalPodAutoscaler
 metadata:
   name: fiapcloudgames-api-gateway-hpa
-  namespace:  fgc
-spec: 
-  scaleTargetRef: 
+  namespace: fgc
+spec:
+  maxReplicas: 10
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 70
+        type: Utilization
+    type: Resource
+  - resource:
+      name: memory
+      target:
+        averageUtilization: 80
+        type: Utilization
+    type: Resource
+  minReplicas: 2
+  scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: fiapcloudgames-api-gateway
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-    - type:  Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
