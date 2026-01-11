@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata:
+metadata: 
   name: fiapcloudgames-api-gateway
   namespace: fgc
-spec:
+spec: 
   replicas:  2
   selector:
     matchLabels:
@@ -12,12 +12,12 @@ spec:
     metadata:
       labels:
         app: fiapcloudgames-api-gateway
-    spec: 
+    spec:  
       containers:
         - name: fiapcloudgames-api-gateway
-          image: ${IMAGE}
+          image:  ${IMAGE}
           imagePullPolicy: Always
-          ports:
+          ports: 
             - containerPort: 8080
           env:
             - name:  USERS_API_URL
@@ -39,42 +39,22 @@ kind:  Service
 metadata:
   name:  fiapcloudgames-api-gateway
   namespace: fgc
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type:  "nlb"
+    service. beta.kubernetes.io/aws-load-balancer-name: "fiapcloudgames-gateway"
 spec:
-  type:  ClusterIP
-  selector:
+  type:  LoadBalancer
+  selector: 
     app: fiapcloudgames-api-gateway
-  ports: 
+  ports:
     - port: 80
       targetPort: 8080
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata: 
-  name: fiapcloudgames-gateway-ingress
-  namespace: fgc
-  annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/load-balancer-name: fiapcloudgames-gateway
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-spec:
-  ingressClassName: alb
-  rules:
-    - http:
-        paths:
-          - path: /
-            pathType:  Prefix
-            backend:
-              service:
-                name: fiapcloudgames-api-gateway
-                port:
-                  number: 80
----
 apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+kind:  HorizontalPodAutoscaler
 metadata:
   name: fiapcloudgames-api-gateway-hpa
-  namespace: fgc
+  namespace:  fgc
 spec: 
   scaleTargetRef: 
     apiVersion: apps/v1
