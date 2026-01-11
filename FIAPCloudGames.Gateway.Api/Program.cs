@@ -55,9 +55,9 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.MapReverseProxy();
-
 app.UseHealthChecks("/health");
+
+app.MapReverseProxy();
 
 app.Run();
 

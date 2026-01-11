@@ -41,6 +41,7 @@ metadata:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-name: fiapcloudgames-gateway
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /health
   name: fiapcloudgames-api-gateway
   namespace: fgc
 spec:
