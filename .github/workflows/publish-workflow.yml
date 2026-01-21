@@ -11,8 +11,8 @@ permissions:
 
 env:
   DOCKERHUB_REPOSITORY: klurgs/fgc-gateway
-  AWS_REGION: us-east-2
-  EKS_CLUSTER_NAME: eks-fgc
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: fgc-cluster
   K8S_NAMESPACE: fgc
 
 jobs:
