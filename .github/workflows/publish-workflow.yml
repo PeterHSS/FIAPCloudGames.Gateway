@@ -21,10 +21,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
+      # 🔐 OIDC SEMPRE VEM ANTES DE QUALQUER COMANDO AWS
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::471354727448:role/GitHubActionsEKSDeployRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 🔎 Debug correto (agora funciona)
       - name: Debug AWS identity
         run: aws sts get-caller-identity
-      
+
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -52,12 +60,6 @@ jobs:
           tags: ${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
           file: FIAPCloudGames.Gateway.Api/Dockerfile
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::471354727448:role/GitHubActionsEKSDeployRole
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
@@ -68,5 +70,5 @@ jobs:
         run: |
           export IMAGE=${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
           kubectl create namespace ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-          envsubst < FIAPCloudGames.Gateway.Api/kubernetes.yaml | kubectl apply --validate=false -f -
+          envsubst < FIAPCloudGames.Gateway.Api/kubernetes.yaml | kubectl apply -f -
           kubectl rollout status deployment/fiapcloudgames-api-gateway -n ${{ env.K8S_NAMESPACE }}
