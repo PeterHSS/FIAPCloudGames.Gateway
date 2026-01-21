@@ -21,7 +21,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
+      
+      - name: Debug AWS identity
+        run: aws sts get-caller-identity
+      
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
