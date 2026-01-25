@@ -22,12 +22,6 @@ spec:
         env:
         - name: ASPNETCORE_ENVIRONMENT
           value: "Production"
-        - name: USERS_API_URL
-          value: http://fiapcloudgames-users-api.fgc.svc.cluster.local
-        - name: ORDERS_API_URL
-          value: http://fiapcloudgames-orders-api.fgc.svc.cluster.local
-        - name: GAMES_API_URL
-          value: http://fiapcloudgames-games-api.fgc.svc.cluster.local
         resources:
           requests:
             cpu: 100m
@@ -68,3 +62,23 @@ spec:
   - port: 80
     targetPort: 80  # Mudado de 8080 para 80
     protocol: TCP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: fgc
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fiapcloudgames-api-gateway
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
